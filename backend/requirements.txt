@@ -1,7 +1,7 @@
 # torch is installed separately (CPU wheel) in the Dockerfile
 numpy==1.26.4
 scikit-learn==1.4.2
-fastapi==0.111.0
+fastapi==0.141.1
 uvicorn[standard]==0.30.1
 pydantic==2.7.4
 python-multipart==0.0.9
