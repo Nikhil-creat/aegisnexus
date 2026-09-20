@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AegisNexus console - AI security operations copilot</title>
+<meta name="description" content="An agentic AI security copilot that combines RAG, CNN malware and traffic classifiers, and human-approved response playbooks.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23140F2E'/%3E%3Cpath d='M16 5l9 5v9l-9 8-9-8v-9z' fill='none' stroke='%237DE7FF' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='15' r='3' fill='%23FF5C7A'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#140F2E; --panel:#1D1642; --panel-2:#271E57; --line:#3A2E7A;
+  --ink:#EFEBFF; --muted:#A79FD6; --ai:#7DE7FF; --uv:#9B7BFF;
+  --flare:#FF5C7A; --orange:#FF9B5C; --amber:#FFC66B; --mint:#6FE3B5;
+  --display:"Chakra Petch","Segoe UI",system-ui,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:72px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);font-weight:600;margin:0;letter-spacing:.01em}
+h1{font-size:clamp(26px,4.2vw,40px);line-height:1.12;max-width:20ch}
+h2{font-size:16px}
+h3{font-size:15px}
+p{margin:0}
+a{color:var(--ai)}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--ai);outline-offset:2px}
+.skip{position:absolute;left:-999px;top:8px;background:var(--ai);color:#140F2E;padding:8px 12px;z-index:10}
+.skip:focus{left:8px}
+
+/* header */
+.top{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;padding:12px clamp(14px,3vw,32px);background:rgba(20,15,46,.94);border-bottom:1px solid var(--line);backdrop-filter:blur(6px)}
+.brand{display:flex;align-items:center;gap:10px;font:600 19px var(--display);color:var(--ink);text-decoration:none}
+.brand svg{width:26px;height:26px}
+.tabs{display:flex;gap:2px;flex:1;min-width:0;overflow-x:auto}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;color:var(--muted);white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ai)}
+.mode{font:500 12px var(--mono);padding:5px 10px;border:1px solid var(--line);border-radius:4px;color:var(--muted)}
+.mode b{font-weight:500;color:var(--amber)}
+.mode.live b{color:var(--mint)}
+
+main{padding:clamp(14px,3vw,32px);max-width:1440px;margin:0 auto}
+.intro{display:grid;gap:14px;margin:6px 0 26px}
+.intro p{max-width:66ch;color:var(--muted)}
+
+/* console grid */
+.grid{display:grid;gap:18px;grid-template-columns:1fr}
+@media(min-width:820px){.grid{grid-template-columns:270px minmax(0,1fr)}.evidence{grid-column:1 / -1}}
+@media(min-width:1180px){.grid{grid-template-columns:270px minmax(0,1fr) 330px}.evidence{grid-column:auto}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px}
+.panel>h2{margin-bottom:12px}
+
+.queue ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.alert{width:100%;text-align:left;background:var(--bg);border:1px solid var(--line);border-left:4px solid var(--sev,var(--line));border-radius:4px;padding:10px 12px;display:grid;gap:3px}
+.alert[aria-current="true"]{background:var(--panel-2);border-color:var(--uv);border-left-color:var(--sev)}
+.alert:hover{border-color:var(--uv)}
+.alert .t{font-weight:500;line-height:1.35}
+.alert .m{font:400 12px var(--mono);color:var(--muted)}
+.sev{--sev:var(--mint)} .sev.medium{--sev:var(--amber)} .sev.high{--sev:var(--orange)} .sev.critical{--sev:var(--flare)}
+
+.case{display:grid;gap:10px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.case .desc{color:var(--muted)}
+.run{justify-self:start;background:var(--ai);color:#140F2E;border:0;font:600 15px var(--display);padding:11px 22px 11px 18px;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px))}
+.run:hover{background:#A6F0FF}
+.run[disabled]{opacity:.55;cursor:progress}
+.empty{color:var(--muted);padding:26px 0;max-width:52ch}
+
+ol.steps{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.step{background:var(--bg);border:1px solid var(--line);border-left:3px solid var(--ai);border-radius:4px;padding:10px 12px;display:grid;gap:6px}
+.step.in{animation:rise .25s ease-out both}
+.step .hd{display:flex;justify-content:space-between;gap:10px;font:500 13px var(--mono);color:var(--ai)}
+.step .hd span:last-child{color:var(--muted)}
+.step .th{color:var(--muted);font-size:14px}
+.step .ob{font-weight:500}
+details{font-size:13px}
+summary{cursor:pointer;color:var(--muted)}
+pre{margin:6px 0 0;padding:10px;background:#0F0B24;border-radius:4px;overflow:auto;max-height:260px;font:400 12px/1.5 var(--mono);color:#CFC8F5}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.report{margin-top:18px;display:grid;gap:16px}
+.verdict{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+.gauge{width:132px}
+.gauge .n{font:600 26px var(--display);fill:var(--ink)}
+.gauge .l{font:400 10px var(--mono);fill:var(--muted)}
+.vtext .s{font:600 20px var(--display);color:var(--sevc)}
+.vtext .v{color:var(--muted)}
+.sum{max-width:72ch}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:500 12px var(--mono);border:1px solid var(--uv);color:#D8CCFF;padding:3px 9px;border-radius:3px}
+.chip small{color:var(--muted);font-size:11px}
+.recs{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.rec{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:start;background:var(--bg);border:1px solid var(--line);padding:10px 12px;border-radius:4px}
+.rec .why{grid-column:1;font-size:13px;color:var(--muted)}
+.rec .act{display:flex;gap:6px;grid-row:1 / span 2;grid-column:2;align-self:center}
+.rec button{background:none;border:1px solid var(--line);padding:5px 10px;border-radius:3px;font-size:13px}
+.rec button:hover{border-color:var(--ai)}
+.rec[data-state="approved"]{border-color:var(--mint)}
+.rec[data-state="rejected"]{opacity:.55}
+.rec .st{font:500 12px var(--mono);color:var(--mint)}
+.cites{font-size:13px;color:var(--muted)}
+.cites b{color:var(--ink);font-weight:500}
+.sub{font:600 14px var(--display);margin-bottom:8px}
+
+/* evidence */
+.plot{position:relative;width:100%;max-width:300px;aspect-ratio:1;background:#0F0B24;border:1px solid var(--line);overflow:hidden}
+.plot canvas{width:100%;height:100%;display:block;image-rendering:pixelated}
+.plot.scan canvas{animation:scan 1s steps(24) both}
+@keyframes scan{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0)}}
+.plotbar{display:flex;align-items:center;gap:10px;margin:10px 0 14px;font-size:13px;color:var(--muted)}
+.bars{display:grid;gap:6px;margin-bottom:14px}
+.bar{display:grid;grid-template-columns:118px 1fr 42px;gap:8px;align-items:center;font-size:13px}
+.bar i{display:block;height:8px;background:var(--uv);border-radius:1px}
+.bar .track{background:#0F0B24;height:8px}
+.bar.top i{background:var(--ai)}
+.bar b{font:500 12px var(--mono);text-align:right;font-weight:500}
+.kv{font:400 12px var(--mono);color:var(--muted);display:grid;gap:2px}
+
+/* knowledge */
+.search{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.search input{flex:1;min-width:220px;background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:11px 12px;border-radius:4px;font:inherit}
+.suggest{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.suggest button{background:none;border:1px solid var(--line);padding:5px 10px;border-radius:3px;color:var(--muted);font-size:13px}
+.suggest button:hover{color:var(--ink);border-color:var(--ai)}
+.hits{display:grid;gap:12px;max-width:900px}
+.hit h3{margin:6px 0}
+.hit .src{font:400 12px var(--mono);color:var(--muted)}
+.hit ul{margin:8px 0 0;padding-left:18px;color:var(--muted)}
+.score{float:right;font:500 12px var(--mono);color:var(--ai)}
+.note{font-size:13px;color:var(--muted);max-width:70ch;margin-top:14px}
+
+/* architecture */
+.layers{display:grid;gap:0;max-width:980px}
+.layer{display:grid;gap:12px;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:6px;position:relative}
+.layer+.layer{margin-top:22px}
+.layer+.layer::before{content:"";position:absolute;left:28px;top:-22px;height:22px;border-left:2px solid var(--uv)}
+.layer>h3{color:var(--ai)}
+.blocks{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.block{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:10px 12px}
+.block b{display:block;font-weight:600;margin-bottom:2px}
+.block span{font-size:13px;color:var(--muted)}
+.gate{border-color:var(--flare)}
+.gate>h3{color:var(--flare)}
+
+/* models */
+.models{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));max-width:1000px}
+.arch{font:400 13px/1.7 var(--mono);color:#CFC8F5;margin:10px 0 0}
+table.cm{border-collapse:collapse;font:400 12px var(--mono);margin-top:10px;width:100%}
+.cm th,.cm td{border:1px solid var(--line);padding:5px 7px;text-align:right}
+.cm th:first-child,.cm td:first-child{text-align:left}
+.cm th{color:var(--muted);font-weight:500}
+.acc{font:600 28px var(--display);color:var(--mint)}
+
+.kc{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:6px}
+.kc div{border:1px solid var(--line);border-radius:3px;padding:6px 8px;font-size:12px;color:var(--muted);min-height:46px}
+.kc .hit{border-color:var(--flare);background:rgba(255,92,122,.13);color:var(--ink)}
+.kc small{display:block;font:400 11px var(--mono);color:var(--amber);margin-top:2px}
+.meta{font:400 12px var(--mono);color:var(--muted)}
+.tag{font:500 11px var(--mono);border:1px solid var(--amber);color:var(--amber);padding:1px 6px;border-radius:3px;margin-left:6px}
+.dl{background:none;border:1px solid var(--uv);color:var(--ink);padding:8px 14px;border-radius:4px;justify-self:start}
+.dl:hover{border-color:var(--ai)}
+.sim{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:14px}
+.sim li{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:8px 12px}
+.sim b{font-weight:500}
+dialog{background:var(--panel);color:var(--ink);border:1px solid var(--uv);border-radius:6px;padding:22px;width:min(380px,92vw)}
+dialog::backdrop{background:rgba(10,7,28,.75)}
+dialog form{display:grid;gap:12px}
+dialog label{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+dialog input,.upl{background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:10px 12px;border-radius:4px;font:inherit;width:100%}
+.stats{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:18px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.stat b{display:block;font:600 26px var(--display)}
+.stat span{font-size:13px;color:var(--muted)}
+table.cases{width:100%;border-collapse:collapse;font-size:14px}
+.cases th{font-weight:500;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+.cases td{padding:0;border-bottom:1px solid var(--line)}
+.cases td button{all:unset;display:block;width:100%;padding:10px;cursor:pointer;box-sizing:border-box}
+.cases tr:hover td{background:var(--panel-2)}
+.cases .sevtxt{font:500 12px var(--mono)}
+.tblwrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+footer{padding:26px clamp(14px,3vw,32px) 40px;color:var(--muted);font-size:13px;max-width:1440px;margin:0 auto}
+@media(max-width:520px){.verdict{grid-template-columns:1fr}.rec{grid-template-columns:1fr}.rec .act{grid-row:auto;grid-column:1}.bar{grid-template-columns:96px 1fr 40px}}
+@media(prefers-reduced-motion:reduce){.step.in,.plot.scan canvas{animation:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <a class="brand" href="index.html" title="Back to the overview and 3D lab">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3l11 6v12l-11 8-11-8V9z" fill="none" stroke="#7DE7FF" stroke-width="2.2"/><circle cx="16" cy="15" r="3.4" fill="#FF5C7A"/></svg>
+    <span>AegisNexus</span>
+  </a>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" aria-selected="true" data-tab="console">Console</button>
+    <button role="tab" aria-selected="false" data-tab="cases" id="casesTab" hidden>Cases</button>
+    <button role="tab" aria-selected="false" data-tab="knowledge">Knowledge search</button>
+    <button role="tab" aria-selected="false" data-tab="arch">Architecture</button>
+    <button role="tab" aria-selected="false" data-tab="models">Models</button>
+  </nav>
+  <div id="mode" class="mode" role="status">Connecting...</div>
+</header>
+
+<main id="main">
+  <!-- ============================ CONSOLE ============================ -->
+  <section id="tab-console" role="tabpanel">
+    <div class="intro">
+      <h1>Alerts get investigated before an analyst opens them</h1>
+      <p>Pick an alert. The agent inspects attached files with a CNN, classifies network flows, looks up indicators, retrieves ATT&amp;CK and playbook knowledge, then proposes a response. Nothing runs until a person approves it.</p>
+    </div>
+    <div class="grid">
+      <aside class="panel queue" aria-labelledby="qh">
+        <h2 id="qh">Alert queue</h2>
+        <ul id="queue"></ul>
+        <div id="uploadbox" hidden>
+          <h3 class="sub" style="margin-top:18px">Analyze your own file</h3>
+          <input class="upl" type="file" id="upl" aria-label="Choose a file to analyze">
+          <p class="note" style="margin-top:8px">The bytes are drawn as an image and classified. The file is never opened or executed.</p>
+        </div>
+      </aside>
+
+      <section class="panel trace" aria-labelledby="th" aria-live="polite">
+        <h2 id="th">Agent investigation</h2>
+        <div id="case"></div>
+        <ol id="steps" class="steps"></ol>
+        <div id="report"></div>
+      </section>
+
+      <aside class="panel evidence" aria-labelledby="eh">
+        <h2 id="eh">Evidence</h2>
+        <div id="evidence"><p class="empty">Run an investigation to see the file rendered as an image, the regions the model focused on, and class probabilities.</p></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============================ CASES ============================ -->
+  <section id="tab-cases" role="tabpanel" hidden>
+    <div class="intro"><h1>Saved cases and decisions</h1>
+      <p>Every investigation is stored with its full evidence trail. Approvals and rejections are recorded against the analyst who made them.</p></div>
+    <div class="stats" id="stats"></div>
+    <div class="tblwrap"><table class="cases"><thead><tr><th>Case</th><th>Alert</th><th>Severity</th><th>Risk</th><th>Pending</th><th>By</th><th>When</th></tr></thead><tbody id="caselist"></tbody></table></div>
+  </section>
+
+  <!-- ============================ KNOWLEDGE ============================ -->
+  <section id="tab-knowledge" role="tabpanel" hidden>
+    <div class="intro">
+      <h1>Search the security knowledge base</h1>
+      <p>This is the retrieval layer the agent uses. Try a behaviour, a technique ID, or a symptom. Results come from MITRE ATT&amp;CK techniques, OWASP categories and incident-response playbooks.</p>
+    </div>
+    <form class="search" id="kbform" role="search">
+      <input id="kbq" type="search" placeholder="e.g. encrypted files and ransom note" aria-label="Search the knowledge base" autocomplete="off">
+      <button class="run" type="submit">Search</button>
+    </form>
+    <div class="suggest" id="suggest"></div>
+    <div class="hits" id="hits"></div>
+    <p class="note">Retrieval runs in your browser with TF-IDF over the same corpus the backend indexes. In the full stack, swap it for embeddings and a vector database without changing the agent.</p>
+  </section>
+
+  <!-- ============================ ARCHITECTURE ============================ -->
+  <section id="tab-arch" role="tabpanel" hidden>
+    <div class="intro">
+      <h1>How the pieces fit together</h1>
+      <p>Each layer hands structured evidence to the next. The agent may read and reason, but it can only propose actions.</p>
+    </div>
+    <div class="layers">
+      <div class="layer"><h3>Signals in</h3><div class="blocks">
+        <div class="block"><b>Alerts</b><span>EDR, IDS, firewall, auth logs, NetFlow</span></div>
+        <div class="block"><b>Artifacts</b><span>Uploaded files, hashes, IPs, domains</span></div>
+        <div class="block"><b>Flows</b><span>16-packet windows with size, direction, timing, flags, port</span></div>
+        <div class="block"><b>Activity windows</b><span>Event rate, failed ratio, users, IPs, off-hours share, data out</span></div></div></div>
+      <div class="layer"><h3>Agent core</h3><div class="blocks">
+        <div class="block"><b>Planner</b><span>Claude tool use when an API key is set, deterministic offline plan otherwise</span></div>
+        <div class="block"><b>Guardrails</b><span>Read-only tools, untrusted alert text, step budget, required-tool checks</span></div></div></div>
+      <div class="layer"><h3>Tools</h3><div class="blocks">
+        <div class="block"><b>RAG retriever</b><span>TF-IDF over ATT&amp;CK, OWASP and playbooks, with citations</span></div>
+        <div class="block"><b>Byte-plot CNN</b><span>2-D CNN on file images, Grad-CAM heat-map</span></div>
+        <div class="block"><b>Flow CNN</b><span>1-D CNN over packet sequences</span></div>
+        <div class="block"><b>Log anomaly model</b><span>Isolation Forest fitted on a benign baseline, with top-driver explanations</span></div>
+        <div class="block"><b>Agent memory</b><span>Recalls similar past cases from the case database</span></div>
+        <div class="block"><b>Threat intel</b><span>Validated IP, domain and hash lookups</span></div>
+        <div class="block"><b>Risk scorer</b><span>Weighted, explainable 0-100 score</span></div></div></div>
+      <div class="layer"><h3>Report</h3><div class="blocks">
+        <div class="block"><b>Verdict</b><span>Score, severity, ATT&amp;CK mapping, kill-chain coverage</span></div>
+        <div class="block"><b>Export</b><span>Markdown incident report per case</span></div>
+        <div class="block"><b>Evidence trail</b><span>Every tool call with inputs, outputs and timing</span></div>
+        <div class="block"><b>Proposed actions</b><span>Playbook steps and mitigations, status pending approval</span></div></div></div>
+      <div class="layer gate"><h3>Human approval</h3><div class="blocks">
+        <div class="block"><b>Analyst decides</b><span>Approve or reject each action. No autonomous containment.</span></div></div></div>
+      <div class="layer"><h3>Runtime</h3><div class="blocks">
+        <div class="block"><b>Docker Compose</b><span>nginx-unprivileged in front of a FastAPI service</span></div>
+        <div class="block"><b>Hardening</b><span>Non-root user, read-only filesystem, all capabilities dropped, optional API key, CORS allow-list</span></div>
+        <div class="block"><b>Performance</b><span>Streaming results, duplicate-alert cache, per-client rate limiting</span></div>
+        <div class="block"><b>Observability</b><span>Prometheus metrics, audit log, request timing</span></div>
+        <div class="block"><b>CI and supply chain</b><span>Tests, Docker build, CodeQL, Trivy image scan, Dependabot</span></div></div></div>
+    </div>
+  </section>
+
+  <!-- ============================ MODELS ============================ -->
+  <section id="tab-models" role="tabpanel" hidden>
+    <div class="intro">
+      <h1>The two CNNs</h1>
+      <p>Both are small enough to train on a laptop CPU during the Docker build. They are trained on synthetic, harmless data so the repository ships no malware. Retrain on a real corpus for production use.</p>
+    </div>
+    <div class="models">
+      <article class="panel"><h2>Byte-plot CNN (2-D)</h2>
+        <p class="note">Each file becomes a 64x64 grayscale image. Code, text, padding and packed or encrypted regions look different, so a CNN can classify them and Grad-CAM can show where it looked.</p>
+        <pre class="arch">Input 1x64x64
+Conv3x3 16 + BN + ReLU + Pool
+Conv3x3 32 + BN + ReLU + Pool
+Conv3x3 64 + BN + ReLU + Pool
+Conv3x3 128 + BN + ReLU   (8x8 map for Grad-CAM)
+GlobalAvgPool, Dropout 0.3, Linear 4
+Classes: benign, packed_or_encrypted,
+         trojan_dropper, ransomware_like</pre>
+        <div id="m-file"></div></article>
+      <article class="panel"><h2>Flow CNN (1-D)</h2>
+        <p class="note">A window of 16 packets with 5 channels (size, direction, inter-arrival time, TCP flag, destination port) is classified as normal traffic or a known attack pattern.</p>
+        <pre class="arch">Input 5x16
+Conv1d 32 + BN + ReLU
+Conv1d 64 + BN + ReLU + Pool
+Conv1d 64 + ReLU
+GlobalAvgPool, Dropout 0.2, Linear 4
+Classes: benign, syn_flood,
+         port_scan, brute_force</pre>
+        <div id="m-flow"></div></article>
+    </div>
+    <div class="models" style="margin-top:18px"><article class="panel"><h2>Log anomaly model (Isolation Forest)</h2>
+      <p class="note">Fitted only on a benign baseline of activity windows. A window is flagged when it is rarer than 98% of that baseline, and the features that deviate most are reported as drivers.</p>
+      <pre class="arch">Features: events_per_min, failed_ratio,
+          distinct_users, distinct_ips,
+          off_hours_ratio, mb_out
+150 trees, benign baseline of 1000 windows
+Output: anomaly probability, drivers,
+        credential_attack / data_exfiltration /
+        off_hours_activity</pre></article></div>
+    <p class="note" id="m-note"></p>
+  </section>
+</main>
+
+<dialog id="login" aria-labelledby="lh">
+  <form id="loginform">
+    <h2 id="lh">Sign in</h2>
+    <p class="note" id="loginmsg" style="margin:0"></p>
+    <label>Username<input name="u" autocomplete="username" required></label>
+    <label>Password<input name="p" type="password" autocomplete="current-password" required></label>
+    <button class="run" type="submit">Sign in</button>
+  </form>
+</dialog>
+
+<footer>
+  Defensive use only. Every sample in this demo is synthetic and harmless. Source code:
+  <a href="https://github.com/Nikhil-creat/aegisnexus">github.com/Nikhil-creat/aegisnexus</a>.
+</footer>
+
+<script>
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const SEV_COLOR = {low:"#6FE3B5", medium:"#FFC66B", high:"#FF9B5C", critical:"#FF5C7A"};
+const LABELS = {benign:"benign", packed_or_encrypted:"packed / encrypted", trojan_dropper:"trojan dropper", ransomware_like:"ransomware-like", syn_flood:"SYN flood", port_scan:"port scan", brute_force:"brute force", normal:"normal", credential_attack:"credential attack", data_exfiltration:"data exfiltration", off_hours_activity:"off-hours activity", anomalous_activity:"anomalous activity"};
+
+const COMP = {threat_intel:"Threat intel", file_cnn:"File CNN", flow_cnn:"Flow CNN", log_anomaly:"Log anomaly", alert_severity:"Alert severity", attack_coverage:"ATT&CK coverage"};
+const state = {mode:"demo", base:"", token:"", user:null, caseId:null, last:null, alerts:[], runs:{}, meta:{}, current:null, busy:false, kb:null};
+
+/* ---------------------------------------------------------- tabs ---- */
+function switchTab(name) {
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
+  document.querySelectorAll("[id^=tab-]").forEach(sec => sec.hidden = sec.id !== "tab-" + name);
+  if (name === "knowledge") initKnowledge();
+  if (name === "models") renderModels();
+  if (name === "cases") loadCases();
+}
+document.querySelectorAll(".tabs button").forEach(btn => btn.addEventListener("click", () => switchTab(btn.dataset.tab)));
+
+/* ---------------------------------------------------------- data ---- */
+async function getJSON(url, opts) {
+  const r = await fetch(url, opts);
+  if (!r.ok) throw new Error(url + " -> " + r.status);
+  return r.json();
+}
+async function probeLive() {
+  const params = new URLSearchParams(location.search);
+  const candidates = [];
+  if (params.get("api")) candidates.push(params.get("api").replace(/\/$/, ""));
+  else if (!/\.github\.io$/.test(location.hostname) && location.protocol.startsWith("http")) candidates.push("");
+  for (const base of candidates) {
+    try {
+      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 1800);
+      const h = await getJSON(base + "/api/health", {signal: ctl.signal}); clearTimeout(t);
+      if (h.status === "ok") { state.base = base; state.meta = h; return true; }
+    } catch (e) { /* not reachable: fall back to the recorded demo */ }
+  }
+  return false;
+}
+/* Authenticated API helper. The token lives in memory only (never in storage). */
+async function api(path, o = {}) {
+  const h = {}; let body = o.body;
+  if (state.token) h.Authorization = "Bearer " + state.token;
+  if (o.json !== undefined) { h["Content-Type"] = "application/json"; body = JSON.stringify(o.json); }
+  const go = () => fetch(state.base + path, {method: o.method || "GET", headers: h, body});
+  let r = await go();
+  if (r.status === 401 && state.meta.auth_required) { await signIn("Your session expired. Sign in again."); h.Authorization = "Bearer " + state.token; r = await go(); }
+  if (!r.ok) { let d = ""; try { d = (await r.json()).detail; } catch (e) { /* no body */ } throw new Error(typeof d === "string" && d ? d : path + " -> " + r.status); }
+  return r.json();
+}
+let loginWait = null;
+function signIn(msg) {
+  $("#loginmsg").textContent = msg || "Sign in to use the live API.";
+  if (!$("#login").open) $("#login").showModal();
+  return new Promise((resolve, reject) => { loginWait = {resolve, reject}; });
+}
+$("#login").addEventListener("close", () => { if (!state.token && loginWait) { loginWait.reject(new Error("Sign-in cancelled")); loginWait = null; } });
+$("#loginform").addEventListener("submit", async e => {
+  e.preventDefault(); const f = new FormData(e.target);
+  try {
+    const r = await fetch(state.base + "/api/auth/login", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({username: f.get("u"), password: f.get("p")})});
+    const d = await r.json(); if (!r.ok) throw new Error(d.detail || "Sign-in failed");
+    state.token = d.token; state.user = d; e.target.reset(); $("#login").close();
+    if (loginWait) { loginWait.resolve(); loginWait = null; }
+  } catch (err) { $("#loginmsg").textContent = err.message; }
+});
+async function init() {
+  let live = await probeLive();
+  if (live) {
+    try {
+      if (state.meta.auth_required) await signIn();
+      state.alerts = await api("/api/demo/alerts"); state.mode = "live";
+    } catch (e) { live = false; state.token = ""; }
+  }
+  if (!live) {
+    try {
+      const d = await getJSON("data/investigations.json");
+      state.meta = d; d.runs.forEach(r => state.runs[r.alert.id] = r.result);
+      state.alerts = d.runs.map(r => r.alert);
+    } catch (e) { $("#queue").innerHTML = '<li class="empty">Could not load alerts: ' + esc(e.message) + "</li>"; return; }
+  }
+  const m = $("#mode");
+  if (state.mode === "live") {
+    m.classList.add("live");
+    m.innerHTML = "<b>Live API</b> " + esc(state.user ? state.user.username + " (" + state.user.role + ")" : "auth off");
+    m.title = "Connected to " + (state.base || "this server") + ". CNN engine: " + (state.meta.cnn_file || "");
+    $("#casesTab").hidden = false; $("#uploadbox").hidden = false;
+  } else {
+    m.innerHTML = "<b>Recorded demo</b> " + esc(state.meta.cnn_file || "");
+    m.title = "Static data exported by the backend. Run the Docker stack for live investigations, saved cases and file upload.";
+  }
+  renderQueue();
+}
+
+/* -------------------------------------------------------- console ---- */
+function renderQueue() {
+  $("#queue").innerHTML = state.alerts.map(a => `
+    <li><button class="alert sev ${esc(a.severity_hint)}" data-id="${esc(a.id)}" aria-current="false">
+      <span class="t">${esc(a.title)}</span>
+      <span class="m">${esc(a.id)} from ${esc(a.source)}, severity hint ${esc(a.severity_hint)}</span>
+    </button></li>`).join("");
+  document.querySelectorAll(".alert").forEach(b => b.addEventListener("click", () => selectAlert(b.dataset.id)));
+  $("#case").innerHTML = '<p class="empty">Choose an alert from the queue to start.</p>';
+}
+function selectAlert(id) {
+  if (state.busy) return;
+  state.current = state.alerts.find(a => a.id === id); state.caseId = null;
+  document.querySelectorAll(".alert").forEach(b => b.setAttribute("aria-current", String(b.dataset.id === id)));
+  const a = state.current;
+  $("#steps").innerHTML = ""; $("#report").innerHTML = "";
+  $("#evidence").innerHTML = '<p class="empty">Run the investigation to see evidence.</p>';
+  const ind = a.indicators || {};
+  const inds = [...(ind.ips || []), ...(ind.domains || []), ...(ind.hashes || [])];
+  $("#case").innerHTML = `<div class="case">
+      <h3>${esc(a.title)}</h3>
+      <p class="desc">${esc(a.description)}</p>
+      ${inds.length ? `<div class="chips">${inds.map(i => `<span class="chip">${esc(i)}</span>`).join("")}</div>` : ""}
+      <button class="run" id="run">Investigate</button></div>`;
+  $("#run").addEventListener("click", run);
+  if (innerWidth < 820) $("#case").scrollIntoView({behavior: reduce ? "auto" : "smooth", block: "start"});
+}
+async function streamInvestigate(alert, onStep, retry = true) {
+  const h = {"Content-Type": "application/json"}; if (state.token) h.Authorization = "Bearer " + state.token;
+  const r = await fetch(state.base + "/api/investigate/stream", {method: "POST", headers: h, body: JSON.stringify(alert)});
+  if (r.status === 401 && retry && state.meta.auth_required) { await signIn("Your session expired. Sign in again."); return streamInvestigate(alert, onStep, false); }
+  if (!r.ok) { let d = ""; try { d = (await r.json()).detail; } catch (e) { /* no body */ } throw new Error(d || "stream failed: " + r.status); }
+  const reader = r.body.getReader(), dec = new TextDecoder(); let buf = "", result = null;
+  for (;;) {
+    const {value, done} = await reader.read(); if (done) break;
+    buf += dec.decode(value, {stream: true});
+    let i; while ((i = buf.indexOf("\n\n")) >= 0) {
+      const frame = buf.slice(0, i); buf = buf.slice(i + 2);
+      const ev = (frame.match(/^event: (.+)$/m) || [])[1], data = (frame.match(/^data: (.+)$/m) || [])[1];
+      if (!ev || !data) continue; const obj = JSON.parse(data);
+      if (ev === "step") onStep(obj); else if (ev === "result") result = obj; else if (ev === "error") throw new Error(obj.detail);
+    }
+  }
+  if (!result) throw new Error("The stream ended without a result");
+  return result;
+}
+async function run() {
+  if (state.busy) return;
+  state.busy = true; const btn = $("#run"); btn.disabled = true; btn.textContent = "Investigating";
+  $("#steps").innerHTML = ""; $("#report").innerHTML = "";
+  try {
+    let result;
+    if (state.mode === "live") {
+      result = await streamInvestigate(state.current, s => addStep(s)); state.caseId = result.case_id;
+    } else {
+      result = state.runs[state.current.id]; await sleep(reduce ? 0 : 350);
+      for (const s of result.steps) { addStep(s); await sleep(reduce ? 0 : 420); }
+    }
+    renderReport(result); renderEvidence(result);
+  } catch (e) {
+    $("#report").innerHTML = '<p class="empty">The investigation failed: ' + esc(e.message) + "</p>";
+  } finally { state.busy = false; btn.disabled = false; btn.textContent = "Run again"; }
+}
+function addStep(s, quiet) {
+  const li = document.createElement("li"); li.className = "step in";
+  const raw = JSON.stringify({input: s.input, observation: s.observation}, null, 2);
+  li.innerHTML = `<div class="hd"><span>${s.n}. ${esc(s.tool)}</span><span>${esc(s.ms)} ms</span></div>
+    <div class="th">${esc(s.thought)}</div>
+    <div class="ob">${esc(s.observation.summary || "")}</div>
+    <details><summary>Raw input and output</summary><pre>${esc(raw)}</pre></details>`;
+  $("#steps").appendChild(li); if (!quiet) li.scrollIntoView({block: "nearest", behavior: reduce ? "auto" : "smooth"});
+}
+function gauge(score, color) {
+  return `<svg class="gauge" viewBox="0 0 120 78" role="img" aria-label="Risk score ${score} out of 100">
+    <path d="M10 66 A50 50 0 0 1 110 66" fill="none" stroke="#3A2E7A" stroke-width="10" pathLength="100"/>
+    <path d="M10 66 A50 50 0 0 1 110 66" fill="none" stroke="${color}" stroke-width="10" pathLength="100" stroke-dasharray="${score} 100"/>
+    <text class="n" x="60" y="56" text-anchor="middle">${score}</text>
+    <text class="l" x="60" y="72" text-anchor="middle">risk of 100</text></svg>`;
+}
+function renderReport(res) {
+  const r = res.report, color = SEV_COLOR[r.severity] || "#fff";
+  const mitre = r.mitre.length ? r.mitre.map(m => `<span class="chip" title="${esc(m.name)}">${esc(m.id)} <small>${esc(m.tactic)}</small></span>`).join("") : '<span class="empty" style="padding:0">No ATT&amp;CK technique matched with confidence.</span>';
+  const recs = r.recommendations.map((a, i) => {
+    const done = a.status === "approved" || a.status === "rejected";
+    return `<li class="rec" data-state="${esc(a.status)}" data-i="${i}">
+      <div>${esc(a.action)}</div><div class="why">${esc(a.rationale)} (${esc(a.source)})</div>
+      <div class="act">${done ? `<span class="st">${a.status === "approved" ? "Approved" : "Rejected"} by ${esc(a.decided_by || "analyst")}</span>` : '<button data-do="approve">Approve</button><button data-do="reject">Reject</button>'}</div></li>`;
+  }).join("");
+  const cites = r.citations.map(c => `<b>${esc(c.id)}</b> ${esc(c.title)}`).join("; ");
+  $("#report").innerHTML = `<div class="report">
+    <div class="verdict" style="--sevc:${color}">${gauge(r.risk_score, color)}
+      <div class="vtext"><div class="s">${esc(r.severity)} severity</div><div class="v">${esc(r.verdict)}</div>
+      <div class="kv">planner: ${esc(res.engine.llm)}</div></div></div>
+    <p class="sum">${esc(r.summary)}</p>
+    <div class="meta">investigated in ${esc(r.duration_ms)} ms${res.cached ? '<span class="tag">reused duplicate analysis</span>' : ""}</div>
+    <div><h3 class="sub">Kill-chain coverage</h3><div class="kc">${(r.kill_chain || []).map(k => `<div class="${k.hit ? "hit" : ""}">${esc(k.tactic)}${k.hit ? `<small>${esc(k.techniques.join(" "))}</small>` : ""}</div>`).join("")}</div></div>
+    <div><h3 class="sub">Why this score</h3><div class="bars">${(r.risk_components || []).map(c => `<div class="bar"><span>${esc(COMP[c.name] || c.name)}</span><span class="track"><i style="width:${Math.round(c.value * 100)}%"></i></span><b>${Math.round(c.value * 100)}%</b></div>`).join("")}</div>
+      <p class="note" style="margin-top:6px">Each bar is a signal scaled 0 to 100%. The score is their weighted average, so it can be checked by hand.</p></div>
+    <div><h3 class="sub">ATT&amp;CK mapping</h3><div class="chips">${mitre}</div></div>
+    ${(r.similar_cases || []).length ? `<div><h3 class="sub">Similar past cases</h3><ul class="sim">${r.similar_cases.map(c => `<li><b>#${esc(c.case_id)} ${esc(c.title)}</b> (${esc(c.severity)}, risk ${esc(c.risk)}, similarity ${esc(c.similarity)})</li>`).join("")}</ul></div>` : ""}
+    <div><h3 class="sub">Proposed response, awaiting a human</h3><ul class="recs">${recs}</ul></div>
+    <p class="cites"><b>Sources retrieved:</b> ${cites || "none"}</p>
+    <button class="dl" id="dl">Download incident report (.md)</button></div>`;
+  state.last = res;
+  $("#dl").addEventListener("click", downloadReport);
+  document.querySelectorAll(".rec button").forEach(b => b.addEventListener("click", async () => {
+    const li = b.closest(".rec"), ok = b.dataset.do === "approve"; let by = "you (demo, not saved)";
+    if (state.mode === "live" && state.caseId) {
+      try { by = (await api(`/api/cases/${state.caseId}/actions/${li.dataset.i}`, {method: "POST", json: {decision: b.dataset.do}})).decided_by; }
+      catch (err) { li.querySelector(".why").textContent = "Could not save the decision: " + err.message; return; }
+    }
+    li.dataset.state = ok ? "approved" : "rejected";
+    li.querySelector(".act").innerHTML = `<span class="st">${ok ? "Approved" : "Rejected"} by ${esc(by)}</span>`;
+  }));
+}
+function bars(title, probs) {
+  if (!probs) return "";
+  const top = Object.entries(probs).sort((a, b) => b[1] - a[1])[0][0];
+  return `<h3 class="sub">${esc(title)}</h3><div class="bars">${Object.entries(probs).map(([k, v]) =>
+    `<div class="bar ${k === top ? "top" : ""}"><span>${esc(LABELS[k] || k)}</span><span class="track"><i style="width:${(v * 100).toFixed(1)}%"></i></span><b>${Math.round(v * 100)}%</b></div>`).join("")}</div>`;
+}
+function renderEvidence(res) {
+  const ev = res.evidence, box = $("#evidence");
+  let html = "";
+  if (ev.byteplot) {
+    html += `<h3 class="sub">File as an image</h3><div class="plot ${reduce ? "" : "scan"}"><canvas id="cv" width="256" height="256" role="img" aria-label="Byte-plot of the attached file with model attention overlay"></canvas></div>
+      <label class="plotbar"><input type="checkbox" id="att" checked> Show where the model looked</label>`;
+  } else if (!ev.log_anomaly) { html += '<p class="empty" style="padding-top:0">No file attached to this alert.</p>'; }
+  html += bars("File classes", ev.file_probabilities) + bars("Traffic classes", ev.flow_probabilities);
+  if (ev.log_anomaly) {
+    const la = ev.log_anomaly;
+    html += `<h3 class="sub">Activity window</h3><div class="bars"><div class="bar top"><span>${esc(LABELS[la.label] || la.label)}</span><span class="track"><i style="width:${Math.round(la.anomaly_probability * 100)}%"></i></span><b>${Math.round(la.anomaly_probability * 100)}%</b></div></div>
+      <div class="kv" style="margin-bottom:14px">Rarer than ${(la.rarity_percentile * 100).toFixed(1)}% of the benign baseline.<br>Top drivers:<br>${la.drivers.map(d => "&nbsp;" + esc(d.feature) + " = " + esc(d.value) + " (z " + esc(d.z_score) + ")").join("<br>")}</div>`;
+  }
+  const eng = res.engine.classifiers || {};
+  html += `<div class="kv">${Object.entries(eng).map(([k, v]) => esc(k) + ": " + esc(v)).join("<br>")}</div>`;
+  box.innerHTML = html;
+  if (ev.byteplot) {
+    const draw = () => drawPlot($("#cv"), ev.byteplot, ev.attention, $("#att").checked);
+    draw(); $("#att").addEventListener("change", draw);
+  }
+}
+function drawPlot(cv, bp, att, showAtt) {
+  const n = bp.size, ctx = cv.getContext("2d");
+  const off = document.createElement("canvas"); off.width = off.height = n;
+  const octx = off.getContext("2d"), img = octx.createImageData(n, n);
+  for (let i = 0; i < n * n; i++) { const v = bp.pixels[i]; img.data[4*i] = v * .55; img.data[4*i+1] = v * .9; img.data[4*i+2] = Math.min(255, v * 1.05 + 20); img.data[4*i+3] = 255; }
+  octx.putImageData(img, 0, 0);
+  ctx.imageSmoothingEnabled = false; ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.drawImage(off, 0, 0, cv.width, cv.height);
+  if (showAtt && att) {
+    const g = att.length, cell = cv.width / g;
+    att.forEach((row, y) => row.forEach((v, x) => { ctx.fillStyle = `rgba(255,92,122,${Math.min(.7, v * v * .7)})`; ctx.fillRect(x * cell, y * cell, cell, cell); }));
+  }
+}
+
+/* -------------------------------------------------------- export ---- */
+function downloadText(name, text, type) {
+  const url = URL.createObjectURL(new Blob([text], {type: type || "text/markdown"}));
+  const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function mdReport(res) {
+  const r = res.report;
+  return ["# Incident report: " + res.title, "", `- Alert: ${res.alert_id}`, `- Risk: ${r.risk_score}/100 (${r.severity}), ${r.verdict}`, `- Planner: ${res.engine.llm}`, "",
+    "## Summary", "", r.summary, "", "## MITRE ATT&CK", "", ...(r.mitre.length ? r.mitre.map(m => `- ${m.id} ${m.name} (${m.tactic})`) : ["- none"]), "",
+    "## Proposed response", "", ...r.recommendations.map(a => `- [ ] ${a.action} (${a.source})`), "",
+    "## Evidence trail", "", ...res.steps.map(s => `${s.n}. ${s.tool}: ${(s.observation && s.observation.summary) || ""} (${s.ms} ms)`), "",
+    "_Generated by AegisNexus. Proposed actions were not executed automatically._", ""].join("\n");
+}
+async function downloadReport() {
+  const res = state.last; if (!res) return;
+  try {
+    if (state.mode === "live" && state.caseId) {
+      const h = state.token ? {Authorization: "Bearer " + state.token} : {};
+      const r = await fetch(`${state.base}/api/cases/${state.caseId}/report.md`, {headers: h});
+      if (!r.ok) throw new Error("report failed: " + r.status);
+      downloadText(`case-${state.caseId}.md`, await r.text());
+    } else downloadText(`${res.alert_id || "alert"}-report.md`, mdReport(res));
+  } catch (e) { alert(e.message); }
+}
+
+/* ------------------------------------------------ knowledge (RAG) ---- */
+const STOP = new Set("a an and are as at be by for from has have in is it its of on or that the this to was were with into over after before than then them they their there these those not no but if so do does did".split(" "));
+const kbIndex = {docs: [], idf: new Map(), vecs: []};
+function terms(text) {
+  const t = (text.toLowerCase().match(/[a-z0-9.:]+/g) || []).filter(w => w.length > 1 && !STOP.has(w));
+  const out = t.slice(); for (let i = 0; i < t.length - 1; i++) out.push(t[i] + " " + t[i + 1]); return out;
+}
+function vectorize(list) {
+  const tf = new Map(); list.forEach(w => tf.set(w, (tf.get(w) || 0) + 1));
+  const v = new Map(); let norm = 0;
+  tf.forEach((c, w) => { const x = (1 + Math.log(c)) * (kbIndex.idf.get(w) || 0); if (x) { v.set(w, x); norm += x * x; } });
+  norm = Math.sqrt(norm) || 1; v.forEach((x, w) => v.set(w, x / norm)); return v;
+}
+async function initKnowledge() {
+  if (state.kb) return;
+  try { state.kb = kbIndex.docs = await getJSON(state.mode === "live" ? "data/kb.json" : "data/kb.json"); }
+  catch (e) { $("#hits").innerHTML = '<p class="empty">Could not load the knowledge base: ' + esc(e.message) + "</p>"; return; }
+  const raw = kbIndex.docs.map(d => terms(`${d.title}. ${d.tactic}. ${(d.keywords || []).join(" ")}. ${(d.keywords || []).join(" ")}. ${d.text}`));
+  const df = new Map(); raw.forEach(l => new Set(l).forEach(w => df.set(w, (df.get(w) || 0) + 1)));
+  const N = raw.length; df.forEach((c, w) => kbIndex.idf.set(w, Math.log((1 + N) / (1 + c)) + 1));
+  kbIndex.vecs = raw.map(vectorize);
+  $("#suggest").innerHTML = ["encrypted files and ransom note", "half-open connections syn flood", "repeated ssh login failures", "T1027", "sql injection", "large upload to cloud storage"]
+    .map(q => `<button type="button">${esc(q)}</button>`).join("");
+  document.querySelectorAll("#suggest button").forEach(b => b.addEventListener("click", () => { $("#kbq").value = b.textContent; kbSearch(b.textContent); }));
+  kbSearch("ransomware encrypted files");
+}
+function kbSearch(q) {
+  const qv = vectorize(terms(q)), ids = (q.match(/T\d{4}(\.\d{3})?/gi) || []).map(s => s.toUpperCase());
+  const scored = kbIndex.docs.map((d, i) => { let s = 0; qv.forEach((x, w) => { s += x * (kbIndex.vecs[i].get(w) || 0); }); if (ids.includes(d.id)) s = Math.max(s, 1); return {d, s}; })
+    .filter(x => x.s > .04).sort((a, b) => b.s - a.s).slice(0, 6);
+  $("#hits").innerHTML = scored.length ? scored.map(({d, s}) => `<article class="panel hit"><span class="score">${s.toFixed(2)}</span>
+      <div class="src">${esc(d.id)} from ${esc(d.source)}, ${esc(d.tactic)}</div><h3>${esc(d.title)}</h3><p>${esc(d.text)}</p>
+      ${(d.steps || d.mitigations || []).length ? `<ul>${(d.steps || d.mitigations).map(m => `<li>${esc(m)}</li>`).join("")}</ul>` : ""}</article>`).join("")
+    : '<p class="empty">No passage matched. Try different words, or a technique ID such as T1110.</p>';
+}
+$("#kbform").addEventListener("submit", e => { e.preventDefault(); if ($("#kbq").value.trim()) { initKnowledge().then(() => kbSearch($("#kbq").value)); } });
+
+/* ---------------------------------------------------------- models ---- */
+async function renderModels() {
+  let m = null;
+  try { m = state.mode === "live" ? await api("/api/metrics") : await getJSON("data/metrics.json"); } catch (e) { /* ignore */ }
+  const fill = (sel, mm) => {
+    const el = $(sel);
+    if (!mm || !mm.confusion) { el.innerHTML = '<p class="note">No trained-model metrics in this view.</p>'; return; }
+    const max = Math.max(...mm.confusion.flat(), 1);
+    el.innerHTML = `<div class="acc">${(mm.accuracy * 100).toFixed(1)}%</div><div class="kv">validation accuracy on ${mm.validation_samples} held-out samples</div>
+      <table class="cm"><tr><th>true / predicted</th>${mm.classes.map(c => `<th>${esc((LABELS[c] || c).split(" ")[0])}</th>`).join("")}</tr>
+      ${mm.confusion.map((row, i) => `<tr><td>${esc(LABELS[mm.classes[i]] || mm.classes[i])}</td>${row.map(v => `<td style="background:rgba(125,231,255,${(v / max * .5).toFixed(2)})">${v}</td>`).join("")}</tr>`).join("")}</table>`;
+  };
+  fill("#m-file", m && m.file_model); fill("#m-flow", m && m.flow_model);
+  $("#m-note").textContent = m && m.file_model
+    ? "Trained on " + m.trained_on + ", " + m.epochs + " epochs. Numbers on synthetic data are an integration check, not a real-world benchmark."
+    : "This recorded demo was exported with the built-in fallback engine, so there are no CNN metrics here. Start the Docker stack (docker compose up --build) to train the CNNs and see real metrics in live mode.";
+}
+
+/* ------------------------------------------------- cases (live) ---- */
+async function loadCases() {
+  if (state.mode !== "live") return;
+  try {
+    const [st, list] = await Promise.all([api("/api/stats"), api("/api/cases?limit=50")]);
+    const sev = st.by_severity;
+    $("#stats").innerHTML = [["Cases", st.cases], ["Average risk", st.average_risk], ["Actions awaiting approval", st.pending_actions],
+      ["Critical", sev.critical], ["High", sev.high]].map(([l, v]) => `<div class="stat"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("");
+    $("#caselist").innerHTML = list.length ? list.map(c => `<tr><td><button data-id="${c.id}">#${c.id} ${esc(c.title)}</button></td>
+      <td><button data-id="${c.id}">${esc(c.alert_id)}</button></td>
+      <td><button data-id="${c.id}"><span class="sevtxt" style="color:${SEV_COLOR[c.severity]}">${esc(c.severity)}</span></button></td>
+      <td><button data-id="${c.id}">${esc(c.risk)}</button></td><td><button data-id="${c.id}">${esc(c.pending)}</button></td>
+      <td><button data-id="${c.id}">${esc(c.created_by)}</button></td>
+      <td><button data-id="${c.id}">${esc(new Date(c.created * 1000).toLocaleString())}</button></td></tr>`).join("")
+      : '<tr><td colspan="7" class="empty" style="padding:18px">No cases yet. Investigate an alert from the Console.</td></tr>';
+    document.querySelectorAll("#caselist button").forEach(b => b.addEventListener("click", () => openCase(b.dataset.id)));
+  } catch (e) { $("#caselist").innerHTML = '<tr><td colspan="7" class="empty">' + esc(e.message) + "</td></tr>"; }
+}
+async function openCase(id) {
+  try {
+    const res = await api("/api/cases/" + id);
+    switchTab("console"); state.caseId = res.case_id; state.current = null;
+    document.querySelectorAll(".alert").forEach(b => b.setAttribute("aria-current", "false"));
+    $("#case").innerHTML = `<div class="case"><h3>${esc(res.title)}</h3><p class="desc">Case ${esc(res.case_id)}, saved ${esc(new Date(res.created * 1000).toLocaleString())}</p></div>`;
+    $("#steps").innerHTML = ""; res.steps.forEach(s => addStep(s, true));
+    renderReport(res); renderEvidence(res);
+  } catch (e) { alert("Could not open the case: " + e.message); }
+}
+$("#upl").addEventListener("change", async e => {
+  const file = e.target.files[0]; if (!file) return;
+  const fd = new FormData(); fd.append("file", file);
+  $("#evidence").innerHTML = '<p class="empty">Analyzing...</p>';
+  try {
+    const r = await api("/api/analyze/file", {method: "POST", body: fd});
+    renderEvidence({evidence: {byteplot: r.byteplot, attention: r.attention, file_probabilities: r.probabilities, flow_probabilities: null}, engine: {classifiers: {cnn_file: r.engine}}});
+    $("#evidence").insertAdjacentHTML("beforeend", `<div class="kv" style="margin-top:10px">${esc(file.name)}<br>${esc(r.size_bytes)} bytes, entropy ${esc(r.entropy_bits_per_byte)}<br>sha256 ${esc(r.sha256.slice(0, 20))}...<br>verdict: ${esc(LABELS[r.label] || r.label)} (${Math.round(r.confidence * 100)}%)</div>`);
+  } catch (err) { $("#evidence").innerHTML = '<p class="empty">' + esc(err.message) + "</p>"; }
+  e.target.value = "";
+});
+
+init();
+</script>
+</body>
+</html>

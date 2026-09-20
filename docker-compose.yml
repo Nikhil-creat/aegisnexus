@@ -1,0 +1,51 @@
+# One command: docker compose up --build   ->  http://localhost:8080
+services:
+  api:
+    build:
+      context: ./backend
+    environment:
+      # Optional: set in a .env file to let Claude plan investigations. Empty = offline planner.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-claude-sonnet-5}
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      # If empty, a random password is generated on first start and printed in `docker compose logs api`
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      AUTH_REQUIRED: ${AUTH_REQUIRED:-true}
+      RATE_LIMIT_PER_MIN: ${RATE_LIMIT_PER_MIN:-240}
+      TRUST_PROXY: "true"   # the API port is not published; only our nginx can reach it
+    volumes:
+      - aegis-data:/srv/data
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+
+  web:
+    image: nginxinc/nginx-unprivileged:1.27-alpine
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./docs:/usr/share/nginx/html:ro
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+
+  # Optional metrics: docker compose --profile observability up -d   ->  http://localhost:9090
+  prometheus:
+    profiles: ["observability"]
+    image: prom/prometheus:v2.53.0
+    depends_on: [api]
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "127.0.0.1:9090:9090"
+
+volumes:
+  aegis-data:

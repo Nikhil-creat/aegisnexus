@@ -1,0 +1,7 @@
+**/__pycache__
+**/*.pyc
+.git
+.env
+backend/models
+docs
+*.zip

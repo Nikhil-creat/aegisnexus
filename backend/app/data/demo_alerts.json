@@ -1,0 +1,119 @@
+[
+ {
+  "id": "ALERT-1042",
+  "title": "Invoice attachment spawned encoded PowerShell",
+  "source": "EDR",
+  "description": "User opened an invoice attachment from an external sender. The document launched PowerShell with an encoded command, contacted an unfamiliar domain and started renaming many files. Files now contain unreadable content.",
+  "severity_hint": "high",
+  "indicators": {
+   "ips": [
+    "203.0.113.66"
+   ],
+   "domains": [
+    "cdn-update.evil-c2.test"
+   ],
+   "hashes": []
+  },
+  "synthetic_file": "ransomware_like"
+ },
+ {
+  "id": "ALERT-1043",
+  "title": "Half-open connection burst against web tier",
+  "source": "Firewall",
+  "description": "Thousands of half-open TCP connections per second against the public web servers from many source addresses. Latency is climbing.",
+  "severity_hint": "high",
+  "indicators": {
+   "ips": [
+    "192.0.2.77"
+   ],
+   "domains": [],
+   "hashes": []
+  },
+  "synthetic_flow": "syn_flood"
+ },
+ {
+  "id": "ALERT-1044",
+  "title": "Sequential port probing from a single host",
+  "source": "IDS",
+  "description": "One external host probed consecutive ports across the DMZ, each attempt answered with a reset.",
+  "severity_hint": "medium",
+  "indicators": {
+   "ips": [
+    "198.51.100.23"
+   ],
+   "domains": [],
+   "hashes": []
+  },
+  "synthetic_flow": "port_scan"
+ },
+ {
+  "id": "ALERT-1045",
+  "title": "Repeated SSH login failures on bastion",
+  "source": "Auth logs",
+  "description": "Hundreds of failed SSH logins in ten minutes against the bastion host, evenly spaced, from a single address.",
+  "severity_hint": "medium",
+  "indicators": {
+   "ips": [
+    "203.0.113.90"
+   ],
+   "domains": [],
+   "hashes": []
+  },
+  "synthetic_flow": "brute_force"
+ },
+ {
+  "id": "ALERT-1046",
+  "title": "High-entropy executable dropped in temp directory",
+  "source": "EDR",
+  "description": "An unsigned executable appeared in a user's temp directory. Almost the entire file looks encrypted or packed.",
+  "severity_hint": "medium",
+  "indicators": {
+   "ips": [],
+   "domains": [],
+   "hashes": [
+    "9e107d9d372bb6826bd81d3542a419d6"
+   ]
+  },
+  "synthetic_file": "packed_or_encrypted"
+ },
+ {
+  "id": "ALERT-1047",
+  "title": "Nightly backup exceeded outbound baseline",
+  "source": "NetFlow",
+  "description": "The scheduled backup job sent more data than last week. The job binary and its traffic look like the usual pattern.",
+  "severity_hint": "low",
+  "indicators": {
+   "ips": [],
+   "domains": [],
+   "hashes": []
+  },
+  "synthetic_file": "benign",
+  "synthetic_flow": "benign"
+ },
+ {
+  "id": "ALERT-1048",
+  "title": "Large outbound transfer from finance server after hours",
+  "source": "NetFlow",
+  "description": "A finance file server sent far more data than usual to a small set of external addresses late at night. Few users were active.",
+  "severity_hint": "high",
+  "indicators": {
+   "ips": [],
+   "domains": [],
+   "hashes": []
+  },
+  "synthetic_logs": "data_exfil"
+ },
+ {
+  "id": "ALERT-1049",
+  "title": "Login portal failures spiking across many accounts",
+  "source": "Web auth logs",
+  "description": "The customer login portal shows a very high share of failed sign-ins across many different accounts from a wider set of addresses.",
+  "severity_hint": "medium",
+  "indicators": {
+   "ips": [],
+   "domains": [],
+   "hashes": []
+  },
+  "synthetic_logs": "credential_stuffing"
+ }
+]

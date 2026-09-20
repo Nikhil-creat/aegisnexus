@@ -1,0 +1,15 @@
+{
+ "_note": "Synthetic indicators from documentation/test ranges (RFC 5737, .test TLD). Replace with a real feed (MISP, OpenCTI, VirusTotal) in production.",
+ "ips": {
+  "203.0.113.66": {"tag": "c2-server", "confidence": 92, "source": "demo-feed"},
+  "192.0.2.77": {"tag": "ddos-botnet-node", "confidence": 85, "source": "demo-feed"},
+  "203.0.113.90": {"tag": "ssh-bruteforcer", "confidence": 70, "source": "demo-feed"}
+ },
+ "domains": {
+  "cdn-update.evil-c2.test": {"tag": "c2-domain", "confidence": 95, "source": "demo-feed"}
+ },
+ "hashes": {
+  "44d88612fea8a8f36de82e1278abb02f": {"tag": "eicar-test-file", "confidence": 100, "source": "EICAR"},
+  "9e107d9d372bb6826bd81d3542a419d6": {"tag": "packer-family-demo", "confidence": 80, "source": "demo-feed"}
+ }
+}

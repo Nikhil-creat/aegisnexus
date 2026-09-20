@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AegisNexus - an AI analyst for security alerts, in 3D</title>
+<meta name="description" content="AegisNexus is an agentic AI security operations copilot with retrieval over MITRE ATT&CK, CNN and anomaly models, a live 3D threat lab and human-approved responses. Built by Nikhil Chary Sriramoju.">
+<meta name="theme-color" content="#140F2E">
+<meta property="og:type" content="website">
+<meta property="og:title" content="AegisNexus - an AI analyst for security alerts, in 3D">
+<meta property="og:description" content="Agentic AI, RAG, CNNs and anomaly detection for security operations, with a live 3D threat lab.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23140F2E'/%3E%3Cpath d='M16 5l9 5v9l-9 8-9-8v-9z' fill='none' stroke='%237DE7FF' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='15' r='3' fill='%23FF5C7A'/%3E%3C/svg%3E">
+<!-- Keep in sync with assets/profile.js -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Person","name":"Nikhil Chary Sriramoju","jobTitle":"BTech Computer Science and Engineering student",
+ "sameAs":["https://github.com/Nikhil-creat","https://in.linkedin.com/in/nikhil-chary-sriramoju-95041b38a"]}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#140F2E; --panel:#1D1642; --panel-2:#271E57; --line:#3A2E7A;
+  --ink:#EFEBFF; --muted:#A79FD6; --ai:#7DE7FF; --uv:#9B7BFF;
+  --flare:#FF5C7A; --orange:#FF9B5C; --amber:#FFC66B; --mint:#6FE3B5;
+  --display:"Chakra Petch","Segoe UI",system-ui,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 var(--body);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:.005em}
+h1{font-weight:700;font-size:clamp(32px,5.4vw,58px);line-height:1.06;max-width:16ch}
+h2{font-weight:600;font-size:clamp(24px,3.4vw,34px);line-height:1.15;margin-bottom:10px}
+h3{font-weight:600;font-size:17px}
+p{margin:0}
+a{color:var(--ai)}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--ai);outline-offset:3px}
+.skip{position:absolute;left:-999px;top:8px;background:var(--ai);color:#140F2E;padding:8px 12px;z-index:20}
+.skip:focus{left:8px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+
+/* header */
+header.top{position:sticky;top:0;z-index:10;background:rgba(20,15,46,.93);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;gap:8px 26px;flex-wrap:wrap;padding-top:12px;padding-bottom:12px}
+.brand{display:flex;align-items:center;gap:10px;font:600 20px var(--display);color:var(--ink);text-decoration:none}
+.brand svg{width:28px;height:28px}
+nav.links{display:flex;gap:4px 22px;flex:1;flex-wrap:wrap}
+nav.links a{color:var(--muted);text-decoration:none;padding:6px 0}
+nav.links a:hover{color:var(--ink)}
+.btn{display:inline-block;font:600 15px var(--display);text-decoration:none;padding:12px 24px 12px 20px;border:0;background:var(--ai);color:#140F2E;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px))}
+.btn:hover{background:#A6F0FF}
+.btn.sm{padding:9px 18px 9px 15px;font-size:14px}
+.btn.ghost{background:none;color:var(--ink);clip-path:none;border:1px solid var(--uv);padding:11px 20px}
+.btn.ghost:hover{border-color:var(--ai);background:rgba(125,231,255,.08)}
+
+/* hero */
+.hero{padding:clamp(28px,5vw,64px) 0 clamp(24px,4vw,48px)}
+.hero .wrap{display:grid;gap:28px;align-items:center}
+@media(min-width:960px){.hero .wrap{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)}}
+.hero p.lead{color:var(--muted);font-size:18px;max-width:52ch;margin:18px 0 26px}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+.facts{display:flex;gap:10px 28px;flex-wrap:wrap;margin-top:30px;color:var(--muted);font-size:14px}
+.facts b{display:block;font:600 24px var(--display);color:var(--ink)}
+.stage{position:relative;aspect-ratio:1/1;width:100%;max-height:640px;border:1px solid var(--line);background:radial-gradient(circle at 50% 45%,#211858 0%,#140F2E 70%)}
+.stage canvas{width:100%;height:100%;display:block}
+.fallback{display:none;position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;padding:24px;color:var(--muted)}
+body.no3d .stage canvas{display:none}
+body.no3d .fallback{display:flex}
+.replay{display:grid;gap:10px;margin-top:14px}
+.replay .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#caption{font:400 13px/1.5 var(--mono);color:var(--ai);min-height:3.2em}
+.hint{font-size:13px;color:var(--muted)}
+
+/* legend and node info */
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.legend button{background:none;border:1px solid var(--line);color:var(--muted);padding:5px 11px;border-radius:3px;font-size:13px;display:flex;align-items:center;gap:7px}
+.legend button:hover,.legend button[aria-pressed="true"]{color:var(--ink);border-color:var(--ai)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--c)}
+#nodeInfo{min-height:4.6em;color:var(--muted);font-size:15px;margin-top:10px;max-width:60ch}
+#nodeInfo b{color:var(--ink);font-family:var(--display);font-weight:600}
+
+/* sections */
+section.block{padding:clamp(40px,7vw,84px) 0;border-top:1px solid var(--line)}
+section.block>.wrap>p.sub{color:var(--muted);max-width:64ch;margin-bottom:26px}
+
+/* lab */
+.picker{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.picker button{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--sev,var(--line));padding:8px 12px;border-radius:3px;text-align:left;max-width:280px;font-size:14px;line-height:1.35}
+.picker button[aria-pressed="true"]{background:var(--panel-2);border-color:var(--uv);border-left-color:var(--sev)}
+.picker small{display:block;font:400 11px var(--mono);color:var(--muted)}
+.sev-low{--sev:var(--mint)}.sev-medium{--sev:var(--amber)}.sev-high{--sev:var(--orange)}.sev-critical{--sev:var(--flare)}
+.lab{display:grid;gap:20px}
+@media(min-width:900px){.lab{grid-template-columns:1fr 1fr}}
+.lab figure{margin:0;display:grid;gap:10px}
+.lab .stage{aspect-ratio:1/1}
+.lab figcaption{color:var(--muted);font-size:14px;max-width:56ch}
+.lab figcaption b{color:var(--ink);font-weight:500}
+.toggle{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.overlay-msg{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:26px;color:var(--muted);font-size:14px;pointer-events:none}
+.stage.empty .overlay-msg{display:flex}
+.labnote{margin-top:22px;padding:16px 18px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--uv);max-width:900px}
+.labnote .k{font:500 12px var(--mono);color:var(--muted)}
+
+/* inside */
+dl.inside{display:grid;gap:0;margin:0;max-width:980px}
+dl.inside div{display:grid;gap:4px 28px;padding:16px 0;border-bottom:1px solid var(--line)}
+@media(min-width:760px){dl.inside div{grid-template-columns:220px 1fr}}
+dl.inside dt{font:600 17px var(--display);color:var(--ai)}
+dl.inside dd{margin:0;color:var(--muted)}
+
+/* author */
+.author{display:grid;gap:34px}
+@media(min-width:960px){.author{grid-template-columns:minmax(0,.9fr) minmax(0,1.5fr)}}
+.who h2{margin-bottom:4px}
+.who .role{color:var(--ai);font-family:var(--display);font-size:18px;margin-bottom:14px}
+.who p.sum{color:var(--muted);max-width:52ch;margin-bottom:20px}
+.certs{display:grid;gap:22px}
+.certs h3{margin-bottom:8px;color:var(--ink)}
+.certs ul{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.certs li{color:var(--muted);font-size:14.5px;padding-left:14px;position:relative}
+.certs li::before{content:"";position:absolute;left:0;top:.62em;width:6px;height:6px;background:var(--uv)}
+.count{color:var(--muted);font-size:14px;margin:4px 0 16px}
+
+footer{border-top:1px solid var(--line);padding:26px 0 44px;color:var(--muted);font-size:14px}
+footer .wrap{display:flex;gap:10px 28px;flex-wrap:wrap;justify-content:space-between}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="AegisNexus home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3l11 6v12l-11 8-11-8V9z" fill="none" stroke="#7DE7FF" stroke-width="2.2"/><circle cx="16" cy="15" r="3.4" fill="#FF5C7A"/></svg>
+      AegisNexus
+    </a>
+    <nav class="links" aria-label="Sections">
+      <a href="#lab">3D threat lab</a>
+      <a href="#inside">What is inside</a>
+      <a href="#author">Author and credentials</a>
+      <a href="https://github.com/Nikhil-creat/aegisnexus" id="lnkRepo">Source</a>
+    </nav>
+    <a class="btn sm" href="console.html">Open the console</a>
+  </div>
+</header>
+
+<main id="main">
+  <!-- ================================ HERO ================================ -->
+  <section class="hero" id="top">
+    <div class="wrap">
+      <div>
+        <h1>Security alerts, investigated by an AI agent you can watch think</h1>
+        <p class="lead">AegisNexus pairs an agentic planner with retrieval over MITRE ATT&amp;CK, two CNNs and an anomaly model. Every step is visible, every score can be checked by hand, and no response runs until a person approves it.</p>
+        <div class="cta">
+          <a class="btn" href="console.html">Open the console</a>
+          <a class="btn ghost" href="#lab">Explore the 3D lab</a>
+          <a class="btn ghost" href="https://github.com/Nikhil-creat/aegisnexus" id="lnkRepo2">View the code</a>
+        </div>
+        <div class="facts" aria-label="Project at a glance">
+          <div><b>9</b>agent tools</div><div><b>34</b>knowledge passages</div><div><b>3</b>ML models</div><div><b>8</b>demo alerts</div>
+        </div>
+      </div>
+      <div>
+        <div class="stage" id="heroStage">
+          <canvas id="hero3d" role="img" aria-label="Interactive 3D diagram: the agent planner at the centre, connected to its tools. Drag to rotate."></canvas>
+          <div class="fallback">The 3D view needs WebGL. Every component is still listed below.</div>
+        </div>
+        <div class="replay">
+          <div class="row">
+            <button class="btn sm" id="replay">Replay an investigation</button>
+            <span class="hint" id="replayFor">Drag to rotate. Select a node to read about it.</span>
+          </div>
+          <div id="caption" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+    <div class="wrap" style="display:block;margin-top:8px">
+      <div class="legend" id="legend" role="group" aria-label="Components"></div>
+      <div id="nodeInfo" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- ================================ LAB ================================ -->
+  <section class="block" id="lab">
+    <div class="wrap">
+      <h2>3D threat lab</h2>
+      <p class="sub">Pick a recorded investigation. The left scene shows how far the attack progressed through the kill chain. The right scene shows the file the way the CNN sees it. Drag either scene to rotate it.</p>
+      <div class="picker" id="picker" role="group" aria-label="Choose an investigation"></div>
+      <div class="lab">
+        <figure>
+          <div class="stage" id="kcStage"><canvas id="kc3d" role="img" aria-label="3D kill-chain: pillars for each ATT&CK tactic around a central risk column"></canvas><div class="fallback">The 3D view needs WebGL.</div></div>
+          <figcaption><b>Kill-chain ring.</b> A pillar rises where the agent found an ATT&amp;CK tactic, and the amber line follows the attack in order. The centre column is the risk score, coloured by severity.</figcaption>
+        </figure>
+        <figure>
+          <div class="stage" id="terStage"><canvas id="ter3d" role="img" aria-label="3D terrain built from the bytes of a file, with regions the model focused on shown in red"></canvas><div class="fallback">The 3D view needs WebGL.</div><div class="overlay-msg" id="terMsg"></div></div>
+          <label class="toggle"><input type="checkbox" id="attToggle" checked> Show where the model looked</label>
+          <figcaption><b>Byte-plot terrain.</b> Each byte of the file becomes a height. Structured code makes low, uneven ground. Packed or encrypted data becomes a jagged plateau. Red marks the regions that drove the decision.</figcaption>
+        </figure>
+      </div>
+      <div class="labnote" id="labNote" role="status" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- ================================ INSIDE ================================ -->
+  <section class="block" id="inside">
+    <div class="wrap">
+      <h2>What is inside</h2>
+      <p class="sub">A complete, testable stack rather than a single model. Each part is small enough to read and replace.</p>
+      <dl class="inside">
+        <div><dt>Agentic AI</dt><dd>A tool-using planner with guardrails. It uses Claude when an API key is set and a deterministic plan otherwise. Tools are read-only, alert text is treated as untrusted, and actions are only proposed.</dd></div>
+        <div><dt>Retrieval (RAG)</dt><dd>MITRE ATT&amp;CK, OWASP and incident-response playbooks indexed for search. Every report cites the passages it used.</dd></div>
+        <div><dt>Two CNNs</dt><dd>A 2-D network classifies files drawn as images, with Grad-CAM attention. A 1-D network classifies packet flows.</dd></div>
+        <div><dt>Anomaly detection</dt><dd>An Isolation Forest fitted on a benign baseline flags rare activity and names the features that deviate.</dd></div>
+        <div><dt>Agent memory</dt><dd>Similar past cases are recalled from the case database and shown alongside the verdict.</dd></div>
+        <div><dt>Full stack</dt><dd>FastAPI, SQLite, scrypt password hashing, signed tokens, roles, an audit log, streaming results and Markdown incident reports.</dd></div>
+        <div><dt>Delivery</dt><dd>Docker Compose with non-root, read-only containers, Prometheus metrics, and GitHub Actions running tests, CodeQL and an image scan.</dd></div>
+        <div><dt>Honest limits</dt><dd>The bundled models train on synthetic, harmless data, so their accuracy is an integration check. The README explains how to retrain on real datasets.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ================================ AUTHOR ================================ -->
+  <section class="block" id="author">
+    <div class="wrap">
+      <div class="author">
+        <div class="who">
+          <h2 id="pName">Author</h2>
+          <div class="role" id="pRole"></div>
+          <p class="sum" id="pSum"></p>
+          <div class="cta">
+            <a class="btn sm" id="pGithub" href="#">GitHub</a>
+            <a class="btn ghost sm" id="pLinkedin" href="#">LinkedIn</a>
+            <a class="btn ghost sm" id="pEmail" href="#">Email</a>
+          </div>
+        </div>
+        <div>
+          <h2 style="font-size:24px">Certifications and job simulations</h2>
+          <p class="count" id="certCount"></p>
+          <div class="certs" id="certs"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>AegisNexus is MIT licensed. Defensive security only. Every sample shown here is synthetic and harmless.</span>
+    <span><a href="console.html">Console</a> &nbsp; <a href="https://github.com/Nikhil-creat/aegisnexus" id="lnkRepo3">Source code</a></span>
+  </div>
+</footer>
+
+<noscript><p style="padding:20px;text-align:center;color:#A79FD6">This page uses JavaScript for the 3D scenes. The console and source code are linked above.</p></noscript>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+<script src="assets/profile.js" defer></script>
+<script src="assets/scene3d.js" defer></script>
+<script defer>
+"use strict";
+document.addEventListener("DOMContentLoaded", () => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const P = window.AEGIS_PROFILE || {};
+  const GROUP_COLOR = {core:"#7DE7FF", know:"#9B7BFF", ml:"#7DE7FF", intel:"#FFC66B", out:"#6FE3B5", human:"#FF5C7A"};
+
+  /* ------------------------------------------------ author and credentials */
+  if (P.name) {
+    $("#pName").textContent = P.name; $("#pRole").textContent = P.headline || ""; $("#pSum").textContent = P.summary || "";
+    $("#pGithub").href = P.github; $("#pLinkedin").href = P.linkedin; $("#pEmail").href = "mailto:" + P.email;
+    [["#pGithub", "GitHub profile"], ["#pLinkedin", "LinkedIn profile"], ["#pEmail", "Send an email"]].forEach(([s, l]) => $(s).setAttribute("aria-label", l + " of " + P.name));
+    ["#lnkRepo", "#lnkRepo2", "#lnkRepo3"].forEach(s => { if (P.repo) $(s).href = P.repo; });
+    const groups = P.certifications || [], total = groups.reduce((n, g) => n + g.items.length, 0);
+    $("#certCount").textContent = total + " completed programs. Forage entries are virtual job simulations.";
+    $("#certs").innerHTML = groups.map(g => `<div><h3>${esc(g.group)}</h3><ul>${g.items.map(i => `<li>${esc(i)}</li>`).join("")}</ul></div>`).join("");
+    document.title = "AegisNexus by " + P.name + " - an AI analyst for security alerts, in 3D";
+  }
+
+  /* ------------------------------------------------------------------ 3D */
+  const has3D = window.Aegis3D && Aegis3D.supported();
+  if (!has3D) document.body.classList.add("no3d");
+  const state = {runs: [], sel: 0, hero: null, kc: null, ter: null, replaying: false};
+  const info = n => { $("#nodeInfo").innerHTML = n ? `<b>${esc(n.name)}.</b> ${esc(n.text)}` : "Select a component to read what it does."; };
+
+  let nodes = [];
+  if (has3D) {
+    state.hero = Aegis3D.constellation($("#hero3d"), {onHover: n => n && info(n), onSelect: n => info(n)});
+    nodes = state.hero.nodes;
+    state.kc = Aegis3D.killChain($("#kc3d"));
+    state.ter = Aegis3D.terrain($("#ter3d"));
+  } else {
+    nodes = [{id: "planner", name: "Agent planner", group: "core", text: "Decides which tool to call next."}];
+  }
+  // the legend doubles as the keyboard and screen-reader route into the 3D nodes
+  const LEGEND = [["planner","Agent planner","core"],["rag","RAG retriever","know"],["cnnfile","Byte-plot CNN","ml"],["cnnflow","Flow CNN","ml"],["logs","Log anomaly","ml"],["memory","Case memory","know"],["intel","Threat intel","intel"],["attack","ATT&CK mapper","know"],["risk","Risk scorer","out"],["human","Human approval","human"]];
+  $("#legend").innerHTML = LEGEND.map(([id, name, g]) => `<button type="button" data-id="${id}" aria-pressed="false"><span class="dot" style="--c:${GROUP_COLOR[g]}"></span>${esc(name)}</button>`).join("");
+  document.querySelectorAll("#legend button").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll("#legend button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    const n = nodes.find(x => x.id === b.dataset.id); if (n) info(n);
+    if (state.hero) state.hero.pulseNode(b.dataset.id);
+  }));
+  info(null);
+
+  /* ------------------------------------------------- recorded investigations */
+  const sevOf = r => r.result.report.severity;
+  function renderPicker() {
+    $("#picker").innerHTML = state.runs.map((r, i) => `<button type="button" class="sev-${esc(sevOf(r))}" data-i="${i}" aria-pressed="${i === state.sel}">
+      ${esc(r.alert.title)}<small>${esc(r.alert.id)}, risk ${esc(r.result.report.risk_score)}, ${esc(sevOf(r))}</small></button>`).join("");
+    document.querySelectorAll("#picker button").forEach(b => b.addEventListener("click", () => choose(+b.dataset.i)));
+  }
+  function choose(i) {
+    if (state.replaying) return;
+    state.sel = i; const run = state.runs[i], rep = run.result.report, ev = run.result.evidence;
+    document.querySelectorAll("#picker button").forEach((b, j) => b.setAttribute("aria-pressed", String(j === i)));
+    if (state.kc) state.kc.update(rep);
+    if (state.hero) state.hero.setSeverity(rep.severity);
+    if (state.ter) state.ter.update(ev.byteplot, ev.attention);
+    $("#terStage").classList.toggle("empty", !ev.byteplot);
+    $("#terMsg").textContent = ev.byteplot ? "" : "This alert has no file, so there is no byte-plot. Choose the invoice or high-entropy executable alert to see one.";
+    const hit = rep.kill_chain.filter(k => k.hit).map(k => k.tactic);
+    $("#labNote").innerHTML = `<div class="k">${esc(run.alert.id)} from ${esc(run.alert.source)}</div><b>${esc(run.alert.title)}</b><p style="color:var(--muted);margin-top:6px">${esc(rep.facts)}</p>
+      <p style="margin-top:8px"><span class="k">Kill-chain stages reached:</span> ${esc(hit.join(", ") || "none with confidence")}</p>`;
+    $("#replayFor").textContent = "Replays: " + run.alert.id;
+  }
+  $("#attToggle").addEventListener("change", e => state.ter && state.ter.setAttention(e.target.checked));
+
+  /* ------------------------------------------------------------------ replay */
+  $("#replay").addEventListener("click", async () => {
+    if (state.replaying || !state.runs.length) return;
+    state.replaying = true; const btn = $("#replay"), cap = $("#caption"); btn.disabled = true;
+    const run = state.runs[state.sel];
+    cap.textContent = "Alert received: " + run.alert.title;
+    await sleep(reduce ? 300 : 900);
+    for (const s of run.result.steps) {
+      if (state.hero) state.hero.pulse(s.tool);
+      cap.textContent = s.n + ". " + s.tool + ": " + ((s.observation && s.observation.summary) || "");
+      await sleep(reduce ? 500 : 1300);
+    }
+    const r = run.result.report;
+    if (state.hero) state.hero.pulseNode("human");
+    cap.textContent = `Risk ${r.risk_score}/100 (${r.severity}). ${r.recommendations.length} action(s) proposed, none executed until a person approves.`;
+    btn.disabled = false; btn.textContent = "Replay again"; state.replaying = false;
+  });
+
+  fetch("data/investigations.json").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(d => {
+    state.runs = d.runs; renderPicker();
+    const first = Math.max(0, state.runs.findIndex(r => r.result.evidence.byteplot));   // start on a case that has a file
+    choose(first);
+  }).catch(() => { $("#labNote").textContent = "Recorded investigations could not be loaded, so the lab is empty."; });
+});
+</script>
+</body>
+</html>
