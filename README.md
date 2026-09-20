@@ -159,3 +159,16 @@ The committed `docs/data/` was recorded with the heuristic engine. After `docker
 Embedding-based retrieval, Postgres, live log ingestion (syslog, Wazuh, Suricata), SOAR connectors behind the approval gate, model-drift monitoring, adversarial-robustness testing of the CNNs.
 
 MIT licensed.
+
+## Author
+
+**★NIKHIL CHARY SRIRAMOJU★**
+BTech CSE (Final Year)
+
+- GitHub: [Nikhil-creat](https://github.com/Nikhil-creat)
+- LinkedIn: [nikhil-chary-sriramoju](https://in.linkedin.com/in/nikhil-chary-sriramoju-95041b38a)
+- Email: sriramojunikhil66@gmail.com
+- Instagram: [@nikhil__sriramoju](https://www.instagram.com/nikhil__sriramoju)
+- Facebook: [Profile](https://www.facebook.com/profile.php?id=100079201124141)
+
+  
