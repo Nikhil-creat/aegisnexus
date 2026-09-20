@@ -43,7 +43,7 @@ jobs:
       - name: Build API image (trains the CNNs during the build)
         run: docker build --build-arg TRAIN_EPOCHS=2 --build-arg TRAIN_SAMPLES=60 -t aegisnexus-api ./backend
       - name: Scan the image for known vulnerabilities (report only)
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: aegisnexus-api
           severity: HIGH,CRITICAL
