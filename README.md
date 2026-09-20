@@ -7,7 +7,7 @@ Alerts go in. An AI agent inspects the evidence, maps it to MITRE ATT&CK, scores
 **Live site:** https://nikhil-creat.github.io/aegisnexus/ (3D lab, author page)  
 **Console demo:** https://nikhil-creat.github.io/aegisnexus/console.html (recorded data, runs entirely in the browser)
 
-Built by Nikhil Chary Sriramoju. Defensive security only.
+Built by NIKHIL CHARY SRIRAMOJU. Defensive security only.
 
 ## What it combines
 
