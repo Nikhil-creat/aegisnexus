@@ -11,7 +11,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -24,7 +24,7 @@ jobs:
   web:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Syntax-check the site scripts
         run: |
           for f in docs/assets/*.js; do node --check "$f"; done
@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build API image (trains the CNNs during the build)
         run: docker build --build-arg TRAIN_EPOCHS=2 --build-arg TRAIN_SAMPLES=60 -t aegisnexus-api ./backend
       - name: Scan the image for known vulnerabilities (report only)
