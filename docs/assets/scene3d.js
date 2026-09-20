@@ -2,6 +2,7 @@
    Aegis3D.constellation(canvas, opts)  the agent and its tools as an orbiting network
    Aegis3D.killChain(canvas)            ATT&CK tactics as pillars around a risk column
    Aegis3D.terrain(canvas)              a file's bytes as a height-field, with the model's attention
+   Aegis3D.credentialWall(canvas, groups, opts)  a rotating ring of credential badges
    Every scene pauses when off-screen, respects reduced motion, and never hijacks page scroll. */
 (function () {
   "use strict";
@@ -253,5 +254,78 @@
     };
   }
 
-  window.Aegis3D = {supported, constellation, killChain, terrain};
+  /* --------------------------------------------------- credential wall --- */
+  function wrapText(g, text, x, y, maxW, lineH, maxLines) {
+    const words = text.split(" "); let line = "", lines = [];
+    words.forEach(w => { const t = line ? line + " " + w : w; if (g.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; });
+    lines.push(line);
+    if (lines.length > maxLines) { lines.length = maxLines; lines[maxLines - 1] = lines[maxLines - 1].replace(/\s*\S*$/, "") + "..."; }
+    lines.forEach((l, i) => g.fillText(l, x, y + i * lineH));
+    return y + lines.length * lineH;
+  }
+  function badgeTexture(it, color) {
+    const c = document.createElement("canvas"); c.width = 512; c.height = 256;
+    const g = c.getContext("2d"), hex = "#" + color.toString(16).padStart(6, "0");
+    g.fillStyle = "#1D1642"; g.fillRect(0, 0, 512, 256);
+    g.strokeStyle = hex; g.lineWidth = 5; g.strokeRect(3, 3, 506, 250);
+    g.fillStyle = hex; g.fillRect(0, 0, 18, 256);
+    g.textBaseline = "top"; g.textAlign = "left";
+    g.fillStyle = "#EFEBFF"; g.font = '600 35px "Chakra Petch","Segoe UI",sans-serif';
+    const y = wrapText(g, it.t, 42, 26, 440, 42, 3);
+    g.fillStyle = "#A79FD6"; g.font = '400 25px "IBM Plex Sans","Segoe UI",sans-serif';
+    wrapText(g, it.i, 42, Math.max(y + 8, 150), 440, 30, 2);
+    g.fillStyle = hex; g.font = '500 24px "IBM Plex Mono",monospace'; g.fillText(it.d, 42, 214);
+    return new THREE.CanvasTexture(c);
+  }
+
+  function credentialWall(canvas, groups, opts) {
+    opts = opts || {};
+    const S = stage(canvas, {camera: [0, 0.5, 10.8], fov: 40, spin: 0.13, tilt: false});
+    const COLORS = [C.flare, C.ai, C.uv], R = 4.3, badges = [], items = [];
+    groups.forEach((g, gi) => g.items.forEach(it => items.push(Object.assign({group: g.group, gi}, it))));
+    items.forEach((it, i) => {
+      const a = (i / items.length) * Math.PI * 2, y = i % 2 ? 0.62 : -0.62;
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({map: badgeTexture(it, COLORS[it.gi % 3]), transparent: true, depthWrite: false}));
+      sp.scale.set(2.4, 1.2, 1); sp.position.set(Math.cos(a) * R, y, Math.sin(a) * R); sp.userData.item = it;
+      S.root.add(sp); badges.push(sp);
+    });
+    const hub = new THREE.Mesh(new THREE.IcosahedronGeometry(0.8, 1), new THREE.MeshBasicMaterial({color: C.ai, wireframe: true, transparent: true, opacity: 0.8}));
+    S.root.add(hub);
+    const count = label(String(items.length), 1.2, 60); count.position.set(0, 0, 0); S.root.add(count);
+    [-1.5, 1.5].forEach(y => {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(R, 0.012, 8, 180), new THREE.MeshBasicMaterial({color: C.uv, transparent: true, opacity: 0.4}));
+      ring.rotation.x = Math.PI / 2; ring.position.y = y; S.root.add(ring);
+    });
+
+    let filter = null; const v = new THREE.Vector3();
+    function shade() {                                  // nearer badges are brighter, filtered-out ones fade
+      badges.forEach(b => {
+        b.getWorldPosition(v);
+        const depth = (v.z / R + 1) / 2, dim = filter && b.userData.item.group !== filter ? 0.12 : 1;
+        b.material.opacity = (0.3 + 0.7 * depth) * dim;
+      });
+    }
+    S.onTick((t, dt) => { hub.rotation.y += dt * 0.6; hub.rotation.x += dt * 0.25; shade(); });
+    shade();
+
+    const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(); let hover = null;
+    function pick(e) {
+      const b = canvas.getBoundingClientRect();
+      ndc.set(((e.clientX - b.left) / b.width) * 2 - 1, -((e.clientY - b.top) / b.height) * 2 + 1);
+      ray.setFromCamera(ndc, S.camera);
+      const visible = badges.filter(x => !filter || x.userData.item.group === filter);
+      const hit = ray.intersectObjects(visible)[0];
+      return hit ? hit.object.userData.item : null;
+    }
+    canvas.addEventListener("pointermove", e => {
+      if (S.st.drag) { shade(); return; }
+      const it = pick(e);
+      if (it !== hover) { hover = it; canvas.style.cursor = it ? "pointer" : "grab"; if (opts.onHover) opts.onHover(it); }
+    });
+    canvas.addEventListener("pointerup", e => { if (S.st.moved < 6 && opts.onSelect) { const it = pick(e); if (it) opts.onSelect(it); } });
+    canvas.style.cursor = "grab";
+    return {items, setFilter(group) { filter = group || null; shade(); S.request(); }};
+  }
+
+  window.Aegis3D = {supported, constellation, killChain, terrain, credentialWall};
 })();

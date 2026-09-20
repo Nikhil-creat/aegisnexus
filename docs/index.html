@@ -125,6 +125,41 @@ dl.inside dd{margin:0;color:var(--muted)}
 .certs li::before{content:"";position:absolute;left:0;top:.62em;width:6px;height:6px;background:var(--uv)}
 .count{color:var(--muted);font-size:14px;margin:4px 0 16px}
 
+.mono{display:grid;place-items:center;width:64px;height:64px;background:var(--ai);color:#140F2E;font:700 24px var(--display);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.mono.sm{width:40px;height:40px;font-size:15px;flex:none}
+.byline{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;margin-bottom:22px;color:var(--muted);font-size:15px}
+.byline b{color:var(--ink);font-weight:600}
+.byline a{color:var(--ai);text-decoration:none;border-bottom:1px solid rgba(125,231,255,.4)}
+.hire{background:var(--panel);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.hire .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;padding-top:14px;padding-bottom:14px}
+.hire p{font:600 18px var(--display)}
+.hire p span{color:var(--muted);font:400 15px var(--body)}
+.who-row{display:grid;gap:30px;align-items:center}
+@media(min-width:960px){.who-row{grid-template-columns:minmax(0,.85fr) minmax(0,1.3fr)}}
+.who .mono{margin-bottom:16px}
+.who .open{color:var(--amber);font-weight:500;margin:-6px 0 20px}
+.stage.wall{aspect-ratio:4/3;max-height:480px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.filters button{background:none;border:1px solid var(--line);color:var(--muted);padding:6px 12px;border-radius:3px;font-size:13px}
+.filters button[aria-pressed="true"]{color:var(--ink);border-color:var(--ai);background:rgba(125,231,255,.08)}
+body.no3d .filters{display:none}
+#wallInfo{min-height:3.2em;margin-top:10px;color:var(--muted);font-size:14.5px}
+#wallInfo b{color:var(--ink);font-weight:500}
+.counters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:38px 0 28px}
+.counter{border-left:3px solid var(--uv);padding:4px 0 4px 16px}
+.counter b{display:block;font:700 clamp(34px,5vw,48px)/1 var(--display);color:var(--ink)}
+.counter span{color:var(--muted);font-size:14px}
+.counter.hot{border-left-color:var(--flare)}
+.certlist{display:grid;gap:10px;max-width:980px}
+.certlist details{border:1px solid var(--line);background:var(--panel);border-radius:4px;padding:0 16px}
+.certlist summary{padding:14px 0;font:600 17px var(--display);list-style:none}
+.certlist summary::-webkit-details-marker{display:none}
+.certlist summary::after{content:"+";float:right;color:var(--ai)}
+.certlist details[open] summary::after{content:"-"}
+.certlist ul{margin:0 0 14px;padding:0;list-style:none;display:grid;gap:8px}
+.certlist li{color:var(--muted);font-size:14.5px;padding-left:14px;position:relative}
+.certlist li::before{content:"";position:absolute;left:0;top:.62em;width:6px;height:6px;background:var(--uv)}
+.certlist li b{color:var(--ink);font-weight:500}
 footer{border-top:1px solid var(--line);padding:26px 0 44px;color:var(--muted);font-size:14px}
 footer .wrap{display:flex;gap:10px 28px;flex-wrap:wrap;justify-content:space-between}
 </style>
@@ -141,7 +176,7 @@ footer .wrap{display:flex;gap:10px 28px;flex-wrap:wrap;justify-content:space-bet
     <nav class="links" aria-label="Sections">
       <a href="#lab">3D threat lab</a>
       <a href="#inside">What is inside</a>
-      <a href="#author">Author and credentials</a>
+      <a href="#author">Credentials</a>
       <a href="https://github.com/Nikhil-creat/aegisnexus" id="lnkRepo">Source</a>
     </nav>
     <a class="btn sm" href="console.html">Open the console</a>
@@ -153,6 +188,9 @@ footer .wrap{display:flex;gap:10px 28px;flex-wrap:wrap;justify-content:space-bet
   <section class="hero" id="top">
     <div class="wrap">
       <div>
+        <div class="byline"><span class="mono sm" id="byMono" aria-hidden="true">NC</span>
+          <span>Built by <b id="byName">Nikhil Chary Sriramoju</b>, <span id="byRole"></span></span>
+          <a id="byGh" href="https://github.com/Nikhil-creat">GitHub</a><a id="byLi" href="#">LinkedIn</a></div>
         <h1>Security alerts, investigated by an AI agent you can watch think</h1>
         <p class="lead">AegisNexus pairs an agentic planner with retrieval over MITRE ATT&amp;CK, two CNNs and an anomaly model. Every step is visible, every score can be checked by hand, and no response runs until a person approves it.</p>
         <div class="cta">
@@ -183,6 +221,8 @@ footer .wrap{display:flex;gap:10px 28px;flex-wrap:wrap;justify-content:space-bet
       <div id="nodeInfo" aria-live="polite"></div>
     </div>
   </section>
+
+  <div class="hire" id="hire"><div class="wrap"><p id="hireText">Open to cybersecurity and AI roles. <span id="hireSub"></span></p><a class="btn sm" id="hireBtn" href="#">Email me</a></div></div>
 
   <!-- ================================ LAB ================================ -->
   <section class="block" id="lab">
@@ -226,23 +266,30 @@ footer .wrap{display:flex;gap:10px 28px;flex-wrap:wrap;justify-content:space-bet
   <!-- ================================ AUTHOR ================================ -->
   <section class="block" id="author">
     <div class="wrap">
-      <div class="author">
+      <div class="who-row">
         <div class="who">
+          <div class="mono" id="pMono" aria-hidden="true">NC</div>
           <h2 id="pName">Author</h2>
           <div class="role" id="pRole"></div>
           <p class="sum" id="pSum"></p>
+          <p class="open" id="pOpen"></p>
           <div class="cta">
-            <a class="btn sm" id="pGithub" href="#">GitHub</a>
+            <a class="btn sm" id="pEmail" href="#">Hire me</a>
+            <a class="btn ghost sm" id="pGithub" href="#">GitHub</a>
             <a class="btn ghost sm" id="pLinkedin" href="#">LinkedIn</a>
-            <a class="btn ghost sm" id="pEmail" href="#">Email</a>
           </div>
         </div>
         <div>
-          <h2 style="font-size:24px">Certifications and job simulations</h2>
-          <p class="count" id="certCount"></p>
-          <div class="certs" id="certs"></div>
+          <div class="stage wall" id="wallStage">
+            <canvas id="wall3d" role="img" aria-label="Rotating 3D ring of credential badges. Drag to rotate, tap a badge for details."></canvas>
+            <div class="fallback">The 3D wall needs WebGL. The full list is below.</div>
+          </div>
+          <div class="filters" id="wallFilters" role="group" aria-label="Filter credentials"></div>
+          <div id="wallInfo" aria-live="polite"></div>
         </div>
       </div>
+      <div class="counters" id="counters" aria-label="Credentials at a glance"></div>
+      <div class="certlist" id="certs"></div>
     </div>
   </section>
 </main>
@@ -270,21 +317,48 @@ document.addEventListener("DOMContentLoaded", () => {
   const GROUP_COLOR = {core:"#7DE7FF", know:"#9B7BFF", ml:"#7DE7FF", intel:"#FFC66B", out:"#6FE3B5", human:"#FF5C7A"};
 
   /* ------------------------------------------------ author and credentials */
+  const groups = P.certifications || [];
+  const all = groups.flatMap(g => g.items);
+  const initials = (P.name || "AN").split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase();
+  const mail = "mailto:" + (P.email || "") + "?subject=" + encodeURIComponent("Opportunity: AegisNexus project");
   if (P.name) {
-    $("#pName").textContent = P.name; $("#pRole").textContent = P.headline || ""; $("#pSum").textContent = P.summary || "";
-    $("#pGithub").href = P.github; $("#pLinkedin").href = P.linkedin; $("#pEmail").href = "mailto:" + P.email;
-    [["#pGithub", "GitHub profile"], ["#pLinkedin", "LinkedIn profile"], ["#pEmail", "Send an email"]].forEach(([s, l]) => $(s).setAttribute("aria-label", l + " of " + P.name));
+    ["#pMono", "#byMono"].forEach(s => { $(s).textContent = initials; });
+    $("#pName").textContent = P.name; $("#byName").textContent = P.name;
+    $("#pRole").textContent = P.headline || ""; $("#byRole").textContent = P.headline || ""; $("#pSum").textContent = P.summary || "";
+    $("#pOpen").textContent = P.openTo || "";
+    $("#hireText").firstChild.textContent = (P.openTo || "Open to opportunities.") + " ";
+    $("#hireSub").textContent = "Final-year CSE. Happy to walk through the code.";
+    $("#pGithub").href = P.github; $("#pLinkedin").href = P.linkedin; $("#byGh").href = P.github; $("#byLi").href = P.linkedin;
+    $("#pEmail").href = mail; $("#hireBtn").href = mail;
+    [["#pGithub", "GitHub profile"], ["#pLinkedin", "LinkedIn profile"], ["#pEmail", "Email"]].forEach(([s, l]) => $(s).setAttribute("aria-label", l + " of " + P.name));
     ["#lnkRepo", "#lnkRepo2", "#lnkRepo3"].forEach(s => { if (P.repo) $(s).href = P.repo; });
-    const groups = P.certifications || [], total = groups.reduce((n, g) => n + g.items.length, 0);
-    $("#certCount").textContent = total + " completed programs. Forage entries are virtual job simulations.";
-    $("#certs").innerHTML = groups.map(g => `<div><h3>${esc(g.group)}</h3><ul>${g.items.map(i => `<li>${esc(i)}</li>`).join("")}</ul></div>`).join("");
     document.title = "AegisNexus by " + P.name + " - an AI analyst for security alerts, in 3D";
   }
+  const stats = [
+    {n: all.length, l: "certifications and simulations", hot: false},
+    {n: all.filter(c => /Forage/.test(c.i)).length, l: "Forage job simulations", hot: false},
+    {n: (groups[0] ? groups[0].items.length : 0), l: "cybersecurity credentials", hot: true},
+    {n: all.filter(c => /NASSCOM/.test(c.i)).length, l: "NASSCOM courses", hot: false}
+  ];
+  $("#counters").innerHTML = stats.map(x => `<div class="counter${x.hot ? " hot" : ""}"><b data-to="${x.n}">0</b><span>${esc(x.l)}</span></div>`).join("");
+  function countUp(el) {
+    const to = +el.dataset.to; if (reduce) { el.textContent = to; return; }
+    const t0 = performance.now();
+    (function step(now) { const p = Math.min(1, (now - t0) / 1200); el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(step); })(t0);
+  }
+  const bs = document.querySelectorAll("#counters b");
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver(es => { if (es[0].isIntersecting) { bs.forEach(countUp); io.disconnect(); } }); io.observe($("#counters"));
+  } else bs.forEach(b => { b.textContent = b.dataset.to; });
+  $("#certs").innerHTML = groups.map((g, i) => `<details${i === 0 ? " open" : ""}><summary>${esc(g.group)} (${g.items.length})</summary><ul>${
+    g.items.map(c => `<li><b>${esc(c.t)}</b>, ${esc(c.i)}, ${esc(c.d)}</li>`).join("")}</ul></details>`).join("");
+  const showCert = c => { $("#wallInfo").innerHTML = c ? `<b>${esc(c.t)}</b><br>${esc(c.i)}, ${esc(c.d)}` : "Drag to rotate. Tap a badge for details."; };
+  showCert(null);
 
   /* ------------------------------------------------------------------ 3D */
   const has3D = window.Aegis3D && Aegis3D.supported();
   if (!has3D) document.body.classList.add("no3d");
-  const state = {runs: [], sel: 0, hero: null, kc: null, ter: null, replaying: false};
+  const state = {runs: [], sel: 0, hero: null, kc: null, ter: null, wall: null, replaying: false};
   const info = n => { $("#nodeInfo").innerHTML = n ? `<b>${esc(n.name)}.</b> ${esc(n.text)}` : "Select a component to read what it does."; };
 
   let nodes = [];
@@ -293,6 +367,12 @@ document.addEventListener("DOMContentLoaded", () => {
     nodes = state.hero.nodes;
     state.kc = Aegis3D.killChain($("#kc3d"));
     state.ter = Aegis3D.terrain($("#ter3d"));
+    state.wall = Aegis3D.credentialWall($("#wall3d"), groups, {onHover: showCert, onSelect: showCert});
+    $("#wallFilters").innerHTML = ["All"].concat(groups.map(g => g.group)).map((n, i) => `<button type="button" data-g="${i ? esc(n) : ""}" aria-pressed="${i === 0}">${esc(n)}</button>`).join("");
+    document.querySelectorAll("#wallFilters button").forEach(b => b.addEventListener("click", () => {
+      document.querySelectorAll("#wallFilters button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+      state.wall.setFilter(b.dataset.g || null);
+    }));
   } else {
     nodes = [{id: "planner", name: "Agent planner", group: "core", text: "Decides which tool to call next."}];
   }

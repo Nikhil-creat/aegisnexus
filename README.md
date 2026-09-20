@@ -104,9 +104,9 @@ Interactive docs at `/docs` on the API port when running locally (`http://localh
 
 | Page | What it is |
 |---|---|
-| `docs/index.html` | Professional landing page: 3D constellation, 3D threat lab, project summary, author and credentials |
+| `docs/index.html` | Professional landing page: 3D constellation, 3D threat lab, project summary, author banner, 3D credential wall with counters, hire-me strip |
 | `docs/console.html` | The working console (recorded demo on GitHub Pages, live API in Docker) |
-| `docs/assets/profile.js` | **Edit this one file** to change the name, links and certifications shown on the site |
+| `docs/assets/profile.js` | **Edit this one file** to change the name, links, availability line and certifications (counters update themselves) |
 | `docs/assets/scene3d.js` | The 3D scenes |
 
 Three.js r128 loads from cdnjs. To serve it yourself (for a strict CSP or offline use), download `three.min.js` into `docs/assets/vendor/` and change the `<script src>` in `docs/index.html`; then remove the cdnjs host from `deploy/nginx.conf`.
